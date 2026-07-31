@@ -1,0 +1,304 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" dir="rtl">
+            <div>
+                <h2 class="font-bold text-2xl text-gray-900 :text-gray-100 tracking-tight">
+                    {{ __('إضافة عميل جديد') }}
+                </h2>
+                <p class="text-sm text-gray-500 :text-gray-400 mt-1">قم بملء البيانات التالية لإصدار الطلب ورخصة القيادة
+                    الدولية.</p>
+            </div>
+
+            <a href="{{ route('dashboard') }}"
+                class="flex items-center gap-2 px-4 py-2 bg-white :bg-gray-800 border border-gray-300 :border-gray-600 rounded-md font-semibold text-sm text-gray-700 :text-gray-200 shadow-sm hover:bg-gray-50 :hover:bg-gray-700 transition-all duration-200">
+                <i class="bi bi-arrow-right text-base"></i>
+                <span>العودة للقائمة</span>
+            </a>
+        </div>
+    </x-slot>
+
+    <!-- CDNs -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .form-shell {
+            font-family: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+        }
+
+        /* Clean GitHub-inspired focus states */
+        .clean-input:focus {
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+            border-color: #0969da;
+            outline: none;
+        }
+    </style>
+
+    @php
+        $countries = [
+            'EG' => 'مصر',
+            'SA' => 'السعودية',
+            'AE' => 'الإمارات',
+            'KW' => 'الكويت',
+            'QA' => 'قطر',
+            'BH' => 'البحرين',
+            'OM' => 'عُمان',
+            'JO' => 'الأردن',
+            'LB' => 'لبنان',
+            'SY' => 'سوريا',
+            'IQ' => 'العراق',
+            'PS' => 'فلسطين',
+            'YE' => 'اليمن',
+            'LY' => 'ليبيا',
+            'TN' => 'تونس',
+            'DZ' => 'الجزائر',
+            'MA' => 'المغرب',
+            'SD' => 'السودان',
+            'SO' => 'الصومال',
+            'DJ' => 'جيبوتي',
+            'MR' => 'موريتانيا',
+            'KM' => 'جزر القمر',
+            'TR' => 'تركيا',
+            'IR' => 'إيران',
+            'PK' => 'باكستان',
+            'IN' => 'الهند',
+            'BD' => 'بنغلاديش',
+            'ID' => 'إندونيسيا',
+            'MY' => 'ماليزيا',
+            'PH' => 'الفلبين',
+            'TH' => 'تايلاند',
+            'VN' => 'فيتنام',
+            'CN' => 'الصين',
+            'JP' => 'اليابان',
+            'KR' => 'كوريا الجنوبية',
+            'US' => 'الولايات المتحدة',
+            'GB' => 'المملكة المتحدة',
+            'CA' => 'كندا',
+            'AU' => 'أستراليا',
+            'OT' => 'دولة أخرى',
+        ];
+    @endphp
+
+    <div class="py-10 bg-[#f6f8fa] min-h-screen form-shell" dir="rtl" x-data="{
+        gender: '{{ old('gender') }}',
+        license: '{{ old('license_category') }}'
+    }">
+
+        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-[#d0d7de]">
+                <div class="p-6 sm:p-10">
+
+                    {{-- Validation Errors --}}
+                    @if ($errors->any())
+                        <div class="mb-8 p-4 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
+                            <i class="bi bi-exclamation-triangle-fill text-red-600 text-xl mt-0.5"></i>
+                            <div>
+                                <h4 class="font-bold text-red-800 mb-1">يرجى تصحيح الأخطاء التالية:</h4>
+                                <ul class="list-disc list-inside text-sm text-red-600 space-y-1">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data"
+                        class="space-y-10">
+                        @csrf
+
+                        <!-- القسم الأول: البيانات الشخصية -->
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+                                <i class="bi bi-person-badge text-xl text-[#0969da]"></i>
+                                <h3 class="text-lg font-bold text-gray-900">البيانات الشخصية</h3>
+                            </div>
+
+                            <div class="flex flex-col lg:flex-row gap-6">
+
+                                <!-- الاسم -->
+                                <div class="flex-1">
+                                    <label for="full_name" class="block font-semibold text-sm text-gray-700 mb-2">
+                                        {{ __('الاسم بالكامل (بالإنجليزية)') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="full_name" name="full_name" type="text"
+                                        class="clean-input block w-full rounded-md border-[#d0d7de] bg-white text-gray-900 py-2.5 px-3 text-left transition-shadow"
+                                        dir="ltr" value="{{ old('full_name') }}" placeholder="e.g. John Doe"
+                                        required />
+                                    <p class="text-xs text-gray-500 mt-2">حروف إنجليزية مطابقة لجواز السفر (أقصى حد 25
+                                        حرف).</p>
+                                </div>
+
+                                <!-- تاريخ الميلاد -->
+                                <div class="flex-1">
+                                    <label class="block font-semibold text-sm text-gray-700 mb-2">
+                                        {{ __('تاريخ الميلاد') }} <span class="text-red-500">*</span>
+                                    </label>
+
+                                    <div class="flex gap-3" dir="ltr">
+                                        <input name="birth_day" type="number"
+                                            class="clean-input flex-1 block w-full text-center rounded-md border-[#d0d7de] bg-white py-2.5 transition-shadow"
+                                            placeholder="DD" min="1" max="31"
+                                            value="{{ old('birth_day') }}" required />
+                                        <input name="birth_month" type="number"
+                                            class="clean-input flex-1 block w-full text-center rounded-md border-[#d0d7de] bg-white py-2.5 transition-shadow"
+                                            placeholder="MM" min="1" max="12"
+                                            value="{{ old('birth_month') }}" required />
+                                        <input name="birth_year" type="number"
+                                            class="clean-input flex-1 block w-full text-center rounded-md border-[#d0d7de] bg-white py-2.5 transition-shadow"
+                                            placeholder="YYYY" min="1930" max="{{ date('Y') - 18 }}"
+                                            value="{{ old('birth_year') }}" required />
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2 text-right">أكبر من 18 عامًا.</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- القسم الثاني: بيانات الهوية والإقامة -->
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+                                <i class="bi bi-globe2 text-xl text-[#0969da]"></i>
+                                <h3 class="text-lg font-bold text-gray-900">بيانات الهوية والإقامة</h3>
+                            </div>
+
+                            <div class="flex flex-wrap gap-6">
+
+                                <div class="flex-1 min-w-[220px]">
+                                    <label for="blood_type" class="block font-semibold text-sm text-gray-700 mb-2">
+                                        {{ __('فصيلة الدم') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="blood_type" name="blood_type"
+                                        class="clean-input block w-full border-[#d0d7de] bg-white text-gray-900 rounded-md py-2.5 px-3 transition-shadow"
+                                        required>
+                                        <option value="" disabled selected>اختر...</option>
+                                        @foreach (['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as $type)
+                                            <option value="{{ $type }}"
+                                                {{ old('blood_type') == $type ? 'selected' : '' }}>{{ $type }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="flex-1 min-w-[220px]">
+                                    <label for="passport_number" class="block font-semibold text-sm text-gray-700 mb-2">
+                                        {{ __('رقم جواز السفر') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="passport_number" name="passport_number" type="text" dir="ltr"
+                                        class="clean-input block w-full text-left rounded-md py-2.5 uppercase border-[#d0d7de] bg-white text-gray-900 transition-shadow"
+                                        value="{{ old('passport_number') }}" placeholder="A12345678" required />
+                                </div>
+
+                                <!-- إضافة حقل مدة الرخصة -->
+                                <div class="flex-1 min-w-[220px]">
+                                    <label for="license_duration"
+                                        class="block font-semibold text-sm text-gray-700 mb-2">
+                                        {{ __('مدة الرخصة') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="license_duration" name="license_duration"
+                                        class="clean-input block w-full border-[#d0d7de] bg-white text-gray-900 rounded-md py-2.5 px-3 transition-shadow"
+                                        required>
+                                        <option value="" disabled selected>اختر المدة...</option>
+                                        <option value="1" {{ old('license_duration') == 1 ? 'selected' : '' }}>
+                                            سنة واحدة</option>
+                                        <option value="2" {{ old('license_duration') == 2 ? 'selected' : '' }}>
+                                            سنتان</option>
+                                        <option value="3" {{ old('license_duration') == 3 ? 'selected' : '' }}>3
+                                            سنوات</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- القسم الرابع: المرفقات والمستندات -->
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+                                <i class="bi bi-paperclip text-xl text-[#0969da]"></i>
+                                <h3 class="text-lg font-bold text-gray-900">المرفقات والمستندات المطلوبة</h3>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-6">
+
+                                <!-- الصورة الشخصية -->
+                                <div x-data="{ preview: null }"
+                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
+                                        {{ __('الصورة الشخصية') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="file" name="personal_photo" accept="image/*"
+                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+                                        class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
+                                        required>
+                                    <div x-show="preview" x-cloak class="mt-4">
+                                        <img :src="preview"
+                                            class="w-full h-32 object-cover rounded border border-gray-200">
+                                    </div>
+                                </div>
+
+                                <!-- رخصة القيادة -->
+                                <div x-data="{ preview: null }"
+                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
+                                        {{ __('رخصة القيادة المحلية') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="file" name="local_license" accept="image/*"
+                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+                                        class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
+                                        required>
+                                    <div x-show="preview" x-cloak class="mt-4">
+                                        <img :src="preview"
+                                            class="w-full h-32 object-cover rounded border border-gray-200">
+                                    </div>
+                                </div>
+
+                                <!-- جواز السفر -->
+                                <div x-data="{ preview: null }"
+                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
+                                        {{ __('صورة جواز السفر') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="file" name="passport_photo" accept="image/*"
+                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+                                        class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
+                                        required>
+                                    <div x-show="preview" x-cloak class="mt-4">
+                                        <img :src="preview"
+                                            class="w-full h-32 object-cover rounded border border-gray-200">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- الإقرار وزر الإرسال -->
+                        <div class="flex flex-col gap-5 pt-4">
+                            <div class="flex items-start gap-3 p-4 bg-[#f6f8fa] border border-[#d0d7de] rounded-md">
+                                <input id="terms" type="checkbox" name="terms"
+                                    class="mt-1 w-4 h-4 rounded border-gray-300 text-[#0969da] focus:ring-[#0969da] cursor-pointer"
+                                    required>
+                                <label for="terms" class="text-sm text-gray-700 cursor-pointer select-none">
+                                    أقر بـأن الصورة الشخصية بخلفية بيضاء، وجواز السفر ساري المفعول، ورخصة القيادة
+                                    المحلية صالحة، وأن البيانات دقيقة وتحت مسؤوليتي.
+                                </label>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full sm:w-auto self-end inline-flex justify-center items-center gap-2 py-2 px-6 bg-[#2da44e] hover:bg-[#2c974b] text-white font-semibold rounded-md transition-colors border border-[#2da44e]">
+                                <span> حفظ</span>
+                                <i class="bi bi-credit-card"></i>
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
