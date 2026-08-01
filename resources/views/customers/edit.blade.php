@@ -138,6 +138,9 @@
         $passportPhotoUrl = $customer->passport_photo
             ? \Illuminate\Support\Facades\Storage::url($customer->passport_photo)
             : null;
+        $localLicenseBackUrl = $customer->local_license_back
+            ? \Illuminate\Support\Facades\Storage::url($customer->local_license_back)
+            : null;
     @endphp
 
     <div class="py-10 bg-gray-50 min-h-screen form-shell" dir="rtl" x-data="{
@@ -361,6 +364,37 @@
                                         <span
                                             class="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                             <i class="bi bi-check-lg"></i> الصورة الحالية
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- صورة الرخصة الخلفية -->
+                                <div x-data="{ preview: @js($localLicenseBackUrl) }"
+                                    class="flex-1 min-w-[220px] p-4 border border-dashed border-gray-300 rounded-2xl bg-gray-50/60 hover:bg-white hover:border-indigo-300 transition-all">
+
+                                    <x-input-label for="local_license_back"
+                                        class="font-semibold text-gray-700 mb-2 block">
+                                        {{ __('صورة الرخصة الخلفية') }}
+                                    </x-input-label>
+
+                                    <input type="file" id="local_license_back" name="local_license_back"
+                                        accept="image/*"
+                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : @js($localLicenseBackUrl)"
+                                        class="block w-full text-xs text-gray-500
+               file:mr-0 file:ml-3 file:py-2 file:px-4
+               file:rounded-lg file:border-0
+               file:text-xs file:font-semibold
+               file:bg-indigo-50 file:text-indigo-700
+               hover:file:bg-indigo-100 transition-all cursor-pointer">
+
+                                    <div x-show="preview" x-cloak class="mt-3 relative">
+                                        <img :src="preview"
+                                            class="w-full h-32 object-cover rounded-xl border border-gray-200 shadow-sm">
+
+                                        <span
+                                            class="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <i class="bi bi-check-lg"></i>
+                                            الصورة الحالية
                                         </span>
                                     </div>
                                 </div>

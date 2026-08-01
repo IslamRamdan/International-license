@@ -35,17 +35,24 @@ class CustomerController extends Controller
 
     // رفع الصور
     $personalPath = $request->file('personal_photo')->store('documents/personal', 'public');
-    $licensePath  = $request->file('local_license')->store('documents/licenses', 'public');
+    $licensePath = $request->file('local_license')->store('documents/licenses', 'public');
+    $licenseBackPath = $request->file('local_license_back')->store('documents/licenses', 'public');
     $passportPath = $request->file('passport_photo')->store('documents/passports', 'public');
 
-    $birthDate = sprintf('%04d-%02d-%02d', $request->birth_year, $request->birth_month, $request->birth_day);
+    $birthDate = sprintf(
+      '%04d-%02d-%02d',
+      $request->birth_year,
+      $request->birth_month,
+      $request->birth_day
+    );
 
     Customer::create(array_merge($validated, [
-      'user_id'          => auth()->id(),
-      'birth_date'       => $birthDate,
-      'personal_photo'   => $personalPath,
-      'local_license'    => $licensePath,
-      'passport_photo'   => $passportPath,
+      'user_id'             => auth()->id(),
+      'birth_date'          => $birthDate,
+      'personal_photo'      => $personalPath,
+      'local_license'       => $licensePath,
+      'local_license_back'  => $licenseBackPath,
+      'passport_photo'      => $passportPath,
     ]));
 
     return redirect()->route('dashboard')->with('success', 'تم إنشاء بيانات العميل بنجاح!');
@@ -57,6 +64,7 @@ class CustomerController extends Controller
   public function show(Customer $customer)
   {
     $this->authorizeUser($customer);
+
     return view('customers.show', compact('customer'));
   }
 
@@ -66,6 +74,9 @@ class CustomerController extends Controller
   public function edit(Customer $customer)
   {
     $this->authorizeUser($customer);
+
+    // dd($customer); // Debugging line to inspect the $customer object
+
     return view('customers.edit', compact('customer'));
   }
 
@@ -76,25 +87,46 @@ class CustomerController extends Controller
   {
     $this->authorizeUser($customer);
 
-    $validated = $this->validateCustomer($request, isUpdate: true);
+    $validated = $this->validateCustomer($request, true);
 
-    // تحديث الصور في حال تم إرفاق صور جديدة
+    // تحديث الصورة الشخصية
     if ($request->hasFile('personal_photo')) {
       Storage::disk('public')->delete($customer->personal_photo);
-      $customer->personal_photo = $request->file('personal_photo')->store('documents/personal', 'public');
+
+      $customer->personal_photo = $request->file('personal_photo')
+        ->store('documents/personal', 'public');
     }
 
+    // تحديث صورة الرخصة الأمامية
     if ($request->hasFile('local_license')) {
       Storage::disk('public')->delete($customer->local_license);
-      $customer->local_license = $request->file('local_license')->store('documents/licenses', 'public');
+
+      $customer->local_license = $request->file('local_license')
+        ->store('documents/licenses', 'public');
     }
 
+    // تحديث صورة الرخصة الخلفية
+    if ($request->hasFile('local_license_back')) {
+      Storage::disk('public')->delete($customer->local_license_back);
+
+      $customer->local_license_back = $request->file('local_license_back')
+        ->store('documents/licenses', 'public');
+    }
+
+    // تحديث صورة الجواز
     if ($request->hasFile('passport_photo')) {
       Storage::disk('public')->delete($customer->passport_photo);
-      $customer->passport_photo = $request->file('passport_photo')->store('documents/passports', 'public');
+
+      $customer->passport_photo = $request->file('passport_photo')
+        ->store('documents/passports', 'public');
     }
 
-    $birthDate = sprintf('%04d-%02d-%02d', $request->birth_year, $request->birth_month, $request->birth_day);
+    $birthDate = sprintf(
+      '%04d-%02d-%02d',
+      $request->birth_year,
+      $request->birth_month,
+      $request->birth_day
+    );
 
     $customer->update(array_merge($validated, [
       'birth_date' => $birthDate,
@@ -104,29 +136,34 @@ class CustomerController extends Controller
   }
 
   /**
-   * دالة التحقق من المدخلات (Validation)
+   * التحقق من صحة البيانات
    */
   private function validateCustomer(Request $request, bool $isUpdate = false): array
   {
-    $imageRule = $isUpdate ? 'nullable|image|mimes:jpg,jpeg,png|max:2048' : 'required|image|mimes:jpg,jpeg,png|max:2048';
+    $imageRule = $isUpdate
+      ? 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+      : 'required|image|mimes:jpg,jpeg,png|max:2048';
 
     return $request->validate([
-      'full_name'         => 'required|string|regex:/^[a-zA-Z\s]+$/|max:255',
-      'birth_day'         => 'required|numeric|between:1,31',
-      'birth_month'       => 'required|numeric|between:1,12',
-      'birth_year'        => 'required|numeric|max:' . (date('Y') - 18),
-      'blood_type'        => 'required|string',
-      'license_duration'  => 'required|integer|min:1', // <-- تم إضافة التحقق لحقل مدة الرخصة
-      'passport_number'   => 'required|string',
-      'personal_photo'    => $imageRule,
-      'local_license'     => $imageRule,
-      'passport_photo'    => $imageRule,
-      'terms'             => $isUpdate ? 'nullable' : 'accepted',
+      'full_name'            => 'required|string|regex:/^[a-zA-Z\s]+$/|max:255',
+      'birth_day'            => 'required|numeric|between:1,31',
+      'birth_month'          => 'required|numeric|between:1,12',
+      'birth_year'           => 'required|numeric|max:' . (date('Y') - 18),
+      'blood_type'           => 'required|string',
+      'license_duration'     => 'required|integer|min:1',
+      'passport_number'      => 'required|string',
+
+      'personal_photo'       => $imageRule,
+      'local_license'        => $imageRule,
+      'local_license_back'   => $imageRule,
+      'passport_photo'       => $imageRule,
+
+      'terms'                => $isUpdate ? 'nullable' : 'accepted',
     ]);
   }
 
   /**
-   * التأكد من ملكية المستخدم للطلب
+   * التأكد من ملكية المستخدم للبيانات
    */
   private function authorizeUser(Customer $customer): void
   {
@@ -135,17 +172,18 @@ class CustomerController extends Controller
     }
   }
 
+  /**
+   * تغيير حالة العميل
+   */
   public function toggleStatus(Customer $customer)
   {
-    // افتراض أن لديك حقل status في جدول customers، يمكنك عكس قيمته أو تعيينه لقيمة معينة
-    // مثلاً إذا كان الحقل يعبر عن اكتمال الطلب أو تفعيل الحالة:
     $customer->status = 'completed';
     $customer->save();
 
     return response()->json([
       'success' => true,
       'status' => $customer->status,
-      'message' => 'تم تحديث الحالة بنجاح'
+      'message' => 'تم تحديث الحالة بنجاح',
     ]);
   }
 }

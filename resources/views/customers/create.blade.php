@@ -405,6 +405,27 @@
                                             class="w-full h-32 object-cover rounded border border-gray-200">
                                     </div>
                                 </div>
+                                <!-- صورة الرخصة الخلفية -->
+                                <div x-data="{ preview: null }"
+                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
+                                        {{ __('صورة الرخصة الخلفية') }} <span class="text-red-500">*</span>
+                                    </label>
+
+                                    <input type="file" name="local_license_back" accept="image/*"
+                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+                                        class="block w-full text-xs text-gray-500
+               file:mr-0 file:py-2 file:px-4 file:w-full
+               file:rounded-md file:border-0 file:text-xs
+               file:font-semibold file:bg-[#e1e4e8]
+               file:text-gray-900 file:cursor-pointer text-center"
+                                        required>
+
+                                    <div x-show="preview" x-cloak class="mt-4">
+                                        <img :src="preview"
+                                            class="w-full h-32 object-cover rounded border border-gray-200">
+                                    </div>
+                                </div>
 
                                 <!-- جواز السفر -->
                                 <div x-data="{ preview: null }"

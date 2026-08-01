@@ -25,7 +25,8 @@ class Customer extends Model
         'local_license',
         'passport_photo',
         'license_duration',
-        'status'
+        'status',
+        'local_license_back'
     ];
 
     /**

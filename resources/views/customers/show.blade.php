@@ -159,6 +159,9 @@
         $passportPhotoUrl = $customer->passport_photo
             ? \Illuminate\Support\Facades\Storage::url($customer->passport_photo)
             : null;
+        $localLicenseBackUrl = $customer->local_license_back
+            ? \Illuminate\Support\Facades\Storage::url($customer->local_license_back)
+            : null;
 
         $licenseColors = [
             'A' => 'bg-gray-100 text-gray-700 ring-1 ring-gray-200',
@@ -321,6 +324,32 @@
                                     <div
                                         class="h-40 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 flex items-center justify-center text-gray-400 text-sm">
                                         <i class="bi bi-image ml-1"></i> لا توجد صورة
+                                    </div>
+                                @endif
+                            </div>
+                            <!-- صورة الرخصة الخلفية -->
+                            <div class="flex-1 min-w-[220px]">
+                                <span class="block text-xs font-semibold text-gray-500 mb-2">
+                                    صورة الرخصة الخلفية
+                                </span>
+
+                                @if ($localLicenseBackUrl)
+                                    <div @click="lightbox = @js($localLicenseBackUrl)"
+                                        class="cursor-zoom-in group relative rounded-2xl overflow-hidden border border-gray-200">
+                                        <img src="{{ $localLicenseBackUrl }}"
+                                            class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
+
+                                        <div
+                                            class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                            <i
+                                                class="bi bi-zoom-in text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div
+                                        class="h-40 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 flex items-center justify-center text-gray-400 text-sm">
+                                        <i class="bi bi-image ml-1"></i>
+                                        لا توجد صورة
                                     </div>
                                 @endif
                             </div>
