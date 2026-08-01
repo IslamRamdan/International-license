@@ -139,7 +139,7 @@ class CustomerController extends Controller
   {
     // افتراض أن لديك حقل status في جدول customers، يمكنك عكس قيمته أو تعيينه لقيمة معينة
     // مثلاً إذا كان الحقل يعبر عن اكتمال الطلب أو تفعيل الحالة:
-    $customer->status = ($customer->status === 'completed') ? 'pending' : 'completed';
+    $customer->status = 'completed';
     $customer->save();
 
     return response()->json([

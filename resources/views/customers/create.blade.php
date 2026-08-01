@@ -86,7 +86,106 @@
 
     <div class="py-10 bg-[#f6f8fa] min-h-screen form-shell" dir="rtl" x-data="{
         gender: '{{ old('gender') }}',
-        license: '{{ old('license_category') }}'
+        license: '{{ old('license_category') }}',
+        mrzInput: '',
+        mrzError: '',
+        mrzResult: null,
+    
+        parseMRZ() {
+            this.mrzError = '';
+            this.mrzResult = null;
+    
+            const lines = this.mrzInput
+                .trim()
+                .toUpperCase()
+                .split(/\r?\n/)
+                .map(l => l.replace(/\s/g, ''))
+                .filter(Boolean);
+    
+            if (lines.length < 2) {
+                this.mrzError = 'يرجى لصق سطرَي الـ MRZ كاملين (كل سطر يبدأ عادةً بـ P< أو رقم الجواز).';
+                return;
+            }
+    
+            const line1 = lines[lines.length - 2].padEnd(44, '<').slice(0, 44);
+            const line2 = lines[lines.length - 1].padEnd(44, '<').slice(0, 44);
+    
+            // نتأكد إن فيه محتوى كافٍ فعلاً (مش مجرد سطر فاضي اتكمّل بـ <) قبل ما نكمل
+            if (lines[lines.length - 2].length < 15 || lines[lines.length - 1].length < 28) {
+                this.mrzError = 'أحد السطرين قصير جدًا، تأكد إنك لصقت السطرين كاملين من أسفل صفحة البيانات.';
+                return;
+            }
+    
+            try {
+                // ---- السطر الأول: الاسم ----
+                const namesRaw = line1.substring(5).split('<<');
+                const surname = (namesRaw[0] || '').replace(/</g, ' ').trim();
+                const givenNames = (namesRaw.slice(1).join(' ') || '').replace(/</g, ' ').trim();
+                const fullName = [givenNames, surname].filter(Boolean).join(' ');
+    
+                // ---- السطر الثاني: باقي البيانات ----
+                const passportNumber = line2.substring(0, 9).replace(/</g, '').trim();
+                const nationality = line2.substring(10, 13).replace(/</g, '');
+                const birthRaw = line2.substring(13, 19);
+                const sex = line2.substring(20, 21);
+                const expiryRaw = line2.substring(21, 27);
+    
+                // تاريخ الميلاد: ممكن يكون في القرن الماضي أو الحالي حسب السنة الحالية
+                const toBirthDate = (raw) => {
+                    const yy = parseInt(raw.substring(0, 2), 10);
+                    const mm = parseInt(raw.substring(2, 4), 10);
+                    const dd = parseInt(raw.substring(4, 6), 10);
+                    const currentYY = new Date().getFullYear() % 100;
+                    const year = (yy > currentYY ? 1900 : 2000) + yy;
+                    return { day: dd, month: mm, year: year };
+                };
+    
+                // تاريخ الانتهاء: دايمًا في القرن الحالي (20xx) لأن الجواز لا يكون منتهيًا من قرن ماضٍ
+                const toExpiryDate = (raw) => {
+                    const yy = parseInt(raw.substring(0, 2), 10);
+                    const mm = parseInt(raw.substring(2, 4), 10);
+                    const dd = parseInt(raw.substring(4, 6), 10);
+                    return { day: dd, month: mm, year: 2000 + yy };
+                };
+    
+                const birth = toBirthDate(birthRaw);
+                const expiry = toExpiryDate(expiryRaw);
+    
+                if (!fullName || isNaN(birth.day) || isNaN(birth.month) || isNaN(birth.year)) {
+                    this.mrzError = 'تعذّر قراءة البيانات، تأكد من نسخ السطرين بشكل صحيح وكامل.';
+                    return;
+                }
+    
+                // ---- تعبئة الحقول الموجودة في النموذج ----
+                const fullNameEl = document.getElementById('full_name');
+                if (fullNameEl) fullNameEl.value = fullName;
+    
+                const dayEl = document.querySelector('[name=birth_day]');
+                const monthEl = document.querySelector('[name=birth_month]');
+                const yearEl = document.querySelector('[name=birth_year]');
+                if (dayEl) dayEl.value = birth.day;
+                if (monthEl) monthEl.value = birth.month;
+                if (yearEl) yearEl.value = birth.year;
+    
+                const passportEl = document.getElementById('passport_number');
+                if (passportEl) passportEl.value = passportNumber;
+    
+                // مزامنة الجنس مع Alpine (عدّل القيم 'male'/'female' لتطابق حقل الجنس الفعلي عندك)
+                if (sex === 'M') this.gender = 'male';
+                else if (sex === 'F') this.gender = 'female';
+    
+                this.mrzResult = {
+                    fullName: fullName,
+                    passportNumber: passportNumber,
+                    nationality: nationality,
+                    sex: sex === 'M' ? 'ذكر' : (sex === 'F' ? 'أنثى' : sex),
+                    birth: `${birth.day}/${birth.month}/${birth.year}`,
+                    expiry: `${expiry.day}/${expiry.month}/${expiry.year}`,
+                };
+            } catch (e) {
+                this.mrzError = 'حدث خطأ أثناء تحليل الـ MRZ، تأكد من صحة النص الملصوق.';
+            }
+        }
     }">
 
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
@@ -107,6 +206,55 @@
                             </div>
                         </div>
                     @endif
+
+                    {{-- قسم استخراج البيانات من MRZ (اختياري تمامًا ولا يؤثر على الإرسال) --}}
+                    <div class="mb-10 p-5 bg-[#f0f9ff] border border-dashed border-[#54aeff] rounded-md">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="bi bi-upc-scan text-xl text-[#0969da]"></i>
+                            <h3 class="text-base font-bold text-gray-900">تعبئة سريعة من MRZ (اختياري)</h3>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3">
+                            الصق السطرين الموجودين أسفل صفحة بيانات جواز السفر (MRZ)، وسيتم استخراج الاسم وتاريخ
+                            الميلاد ورقم الجواز تلقائيًا. هذا الحقل لا يُرسَل مع النموذج وهو فقط لمساعدتك على التعبئة.
+                        </p>
+
+                        <textarea x-model="mrzInput" rows="2" dir="ltr"
+                            placeholder="P<EGYSURNAME<<GIVENNAME<<<<<<<<<<<<<<<<<<<<&#10;A123456781EGY9001015M3001019<<<<<<<<<<<<<<02"
+                            class="clean-input block w-full font-mono text-xs rounded-md border-[#d0d7de] bg-white text-gray-900 py-2.5 px-3 transition-shadow"></textarea>
+
+                        <div class="flex items-center gap-3 mt-3">
+                            <button type="button" @click="parseMRZ()"
+                                class="inline-flex items-center gap-2 py-2 px-4 bg-[#0969da] hover:bg-[#0860ca] text-white text-sm font-semibold rounded-md transition-colors">
+                                <i class="bi bi-magic"></i>
+                                <span>استخراج البيانات وتعبئة الحقول</span>
+                            </button>
+                            <button type="button" @click="mrzInput=''; mrzResult=null; mrzError=''"
+                                class="text-sm text-gray-500 hover:text-gray-700">
+                                مسح
+                            </button>
+                        </div>
+
+                        <p x-show="mrzError" x-text="mrzError" x-cloak class="text-xs text-red-600 mt-3"></p>
+
+                        <div x-show="mrzResult" x-cloak
+                            class="mt-3 p-3 bg-white border border-[#d0d7de] rounded-md text-xs text-gray-700 space-y-1">
+                            <p><span class="font-semibold">الاسم:</span> <span x-text="mrzResult?.fullName"></span></p>
+                            <p><span class="font-semibold">رقم الجواز:</span> <span
+                                    x-text="mrzResult?.passportNumber"></span></p>
+                            <p><span class="font-semibold">تاريخ الميلاد:</span> <span x-text="mrzResult?.birth"></span>
+                            </p>
+                            <p><span class="font-semibold">الجنسية (كود):</span> <span
+                                    x-text="mrzResult?.nationality"></span> &mdash;
+                                <span class="font-semibold">الجنس:</span> <span x-text="mrzResult?.sex"></span> &mdash;
+                                <span class="font-semibold">تاريخ انتهاء الجواز:</span> <span
+                                    x-text="mrzResult?.expiry"></span>
+                            </p>
+                            <p class="text-[11px] text-gray-400 pt-1">
+                                تم تعبئة الاسم وتاريخ الميلاد ورقم الجواز تلقائيًا في الحقول أدناه. راجع الجنسية والجنس
+                                يدويًا إن كانت هناك حقول لهما في نموذجك.
+                            </p>
+                        </div>
+                    </div>
 
                     <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data"
                         class="space-y-10">
@@ -186,7 +334,8 @@
                                 </div>
 
                                 <div class="flex-1 min-w-[220px]">
-                                    <label for="passport_number" class="block font-semibold text-sm text-gray-700 mb-2">
+                                    <label for="passport_number"
+                                        class="block font-semibold text-sm text-gray-700 mb-2">
                                         {{ __('رقم جواز السفر') }} <span class="text-red-500">*</span>
                                     </label>
                                     <input id="passport_number" name="passport_number" type="text" dir="ltr"

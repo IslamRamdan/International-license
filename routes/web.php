@@ -10,7 +10,6 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     if (auth()->user()->email == 'eslam@gmail.com') {
-        # code...
         $customers = Customer::all();
     } else {
         $customers = auth()->user()->customers()->latest()->paginate(10);
