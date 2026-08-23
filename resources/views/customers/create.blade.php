@@ -276,8 +276,8 @@
                                     </label>
                                     <input id="full_name" name="full_name" type="text"
                                         class="clean-input block w-full rounded-md border-[#d0d7de] bg-white text-gray-900 py-2.5 px-3 text-left transition-shadow"
-                                        dir="ltr" value="{{ old('full_name') }}" placeholder="e.g. John Doe"
-                                        required />
+                                        dir="ltr" value="{{ old('full_name') }}" placeholder="الاسم بالانجليزية"
+                                        maxlength="25" required />
                                     <p class="text-xs text-gray-500 mt-2">حروف إنجليزية مطابقة لجواز السفر (أقصى حد 25
                                         حرف).</p>
                                 </div>
@@ -406,7 +406,7 @@
                                     </div>
                                 </div>
                                 <!-- صورة الرخصة الخلفية -->
-                                <div x-data="{ preview: null }"
+                                {{-- <div x-data="{ preview: null }"
                                     class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('صورة الرخصة الخلفية') }} <span class="text-red-500">*</span>
@@ -425,7 +425,7 @@
                                         <img :src="preview"
                                             class="w-full h-32 object-cover rounded border border-gray-200">
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <!-- جواز السفر -->
                                 <div x-data="{ preview: null }"

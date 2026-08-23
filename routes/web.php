@@ -10,9 +10,11 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     if (auth()->user()->email == 'eslam@gmail.com') {
-        $customers = Customer::all();
+        $customers = Customer::orderByRaw("CASE WHEN status = 'admin' THEN 0 ELSE 1 END")
+            ->latest()
+            ->get();
     } else {
-        $customers = auth()->user()->customers()->latest()->paginate(10);
+        $customers = auth()->user()->customers()->latest()->get();
     }
 
     return view('dashboard', compact('customers'));
@@ -29,6 +31,7 @@ use App\Http\Controllers\CustomerController;
 Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::patch('/customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggleStatus');
+    Route::patch('/customers/{customer}/to-admin', [CustomerController::class, 'toAdmin'])->name('customers.toAdmin');
 });
 
 require __DIR__ . '/auth.php';

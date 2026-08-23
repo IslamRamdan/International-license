@@ -21,6 +21,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- مكتبة تصدير الإكسيل -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <style>
         .form-shell {
             font-family: 'Cairo', ui-sans-serif, system-ui, sans-serif;
@@ -35,9 +38,47 @@
             'C' => 'bg-amber-100 text-amber-700 ring-1 ring-amber-200',
             'D' => 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200',
         ];
+
+        // بيانات العملاء (الاسم ورقم الجواز فقط) لاستخدامها في التصدير
+        $customersForExport = (method_exists($customers, 'getCollection')
+            ? $customers->getCollection()
+            : $customers
+        )->map(
+            fn($c) => [
+                'id' => $c->id,
+                'full_name' => $c->full_name,
+                'passport_number' => $c->passport_number,
+            ],
+        );
     @endphp
 
-    <div class="py-10 bg-gray-50 min-h-screen form-shell" dir="rtl">
+    <div class="py-10 bg-gray-50 min-h-screen form-shell" dir="rtl" x-data="{
+        selectedCustomers: [],
+        customersData: {{ Illuminate\Support\Js::from($customersForExport) }},
+        toggleSelectAll(checked) {
+            this.selectedCustomers = checked ? this.customersData.map(c => String(c.id)) : [];
+        },
+        get allSelected() {
+            return this.customersData.length > 0 && this.selectedCustomers.length === this.customersData.length;
+        },
+        exportSelected() {
+            if (this.selectedCustomers.length === 0) {
+                alert('يرجى تحديد عميل واحد على الأقل قبل التصدير');
+                return;
+            }
+    
+            const rows = this.customersData
+                .filter(c => this.selectedCustomers.includes(String(c.id)))
+                .map(c => ({ 'الاسم بالكامل': c.full_name, 'رقم الجواز': c.passport_number }));
+    
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            worksheet['!cols'] = [{ wch: 30 }, { wch: 20 }];
+    
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'العملاء');
+            XLSX.writeFile(workbook, 'customers_export.xlsx');
+        }
+    }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- رسالة النجاح عند الإضافة أو التعديل --}}
@@ -52,11 +93,33 @@
             <div class="bg-white overflow-hidden shadow-xl shadow-gray-200/60 rounded-3xl border border-gray-100">
                 <div class="p-6 sm:p-8 text-gray-900">
 
+                    {{-- شريط أدوات التحديد والتصدير --}}
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-semibold text-gray-500">
+                            <span x-show="selectedCustomers.length > 0"
+                                x-text="`تم تحديد ${selectedCustomers.length} عميل`"></span>
+                        </span>
+
+                        <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white shadow-md transition-all duration-200"
+                            :class="selectedCustomers.length === 0 ?
+                                'bg-gray-300 cursor-not-allowed' :
+                                'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
+                            <i class="bi bi-file-earmark-excel"></i>
+                            <span>تصدير Excel للمحددين</span>
+                        </button>
+                    </div>
+
                     <div class="overflow-x-auto -mx-6 sm:mx-0">
                         <table class="w-full text-sm text-right text-gray-600 border-collapse">
                             <thead class="text-xs text-gray-500 uppercase bg-gray-50/80">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3.5 font-bold rounded-r-xl">#</th>
+                                    <th scope="col" class="px-6 py-3.5 font-bold rounded-r-xl">
+                                        <input type="checkbox" :checked="allSelected"
+                                            @change="toggleSelectAll($event.target.checked)"
+                                            class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 font-bold">#</th>
                                     <th scope="col" class="px-6 py-3.5 font-bold">الاسم بالكامل</th>
                                     <th scope="col" class="px-6 py-3.5 font-bold">رقم الجواز</th>
                                     <th scope="col" class="px-6 py-3.5 font-bold text-center rounded-l-xl">الإجراءات
@@ -84,6 +147,11 @@
                                                 });
                                         }
                                     }">
+                                        <td class="px-6 py-4">
+                                            <input type="checkbox" value="{{ $customer->id }}"
+                                                x-model="selectedCustomers"
+                                                class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        </td>
                                         <td class="px-6 py-4 font-medium text-gray-400 whitespace-nowrap">
                                             {{ $customer->id }}
                                         </td>
@@ -104,26 +172,67 @@
 
                                         <td class="px-6 py-4 text-center">
                                             @if (auth()->user()->email == 'eslam@gmail.com')
-                                                <button @click="toggleStatus()" :disabled="isLoading"
-                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs text-white shadow-md transition-all duration-200"
-                                                    :class="status === 'completed' ?
-                                                        'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' :
-                                                        'bg-gray-600 hover:bg-gray-700 shadow-gray-600/20'">
+                                                <!-- إظهار زر التبديل للأدمن فقط إذا تم إرسال الطلب (admin) أو اكتمل (completed) -->
+                                                <template x-if="status === 'admin' || status === 'completed'">
+                                                    <button @click="toggleStatus()" :disabled="isLoading"
+                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs text-white shadow-md transition-all duration-200"
+                                                        :class="status === 'completed' ?
+                                                            'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' :
+                                                            'bg-gray-600 hover:bg-gray-700 shadow-gray-600/20'">
 
-                                                    <i class="bi"
-                                                        :class="isLoading ? 'bi-arrow-repeat animate-spin' : (
-                                                            status === 'completed' ? 'bi-check-all' : 'bi-check-lg')"></i>
+                                                        <i class="bi"
+                                                            :class="isLoading ? 'bi-arrow-repeat animate-spin' : (
+                                                                status === 'completed' ? 'bi-check-all' :
+                                                                'bi-check-lg')"></i>
 
-                                                    <span x-text="status === 'completed' ? 'تم (مكتمل)' : 'تم'"></span>
-                                                </button>
+                                                        <span
+                                                            x-text="status === 'completed' ? 'تم الطباعة' : 'اكتملت'"></span>
+                                                    </button>
+                                                </template>
+
+                                                <!-- إظهار رسالة الإنتظار وشفرة عدم الإرسال في حالة عدم انطباق الشرط -->
+                                                <template x-if="status !== 'admin' && status !== 'completed'">
+                                                    <span
+                                                        class="font-semibold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1">
+                                                        <i class="bi bi-clock-history"></i>
+                                                        في انتظار الإرسال للأدمن
+                                                    </span>
+                                                </template>
                                             @else
                                                 <template x-if="status === 'pending'">
                                                     <div class="flex justify-center items-center gap-2">
+                                                        <!-- زر إرسال إلى الأدمن -->
+                                                        <button
+                                                            @click="
+                isLoading = true;
+                axios.patch('{{ route('customers.toAdmin', $customer) }}')
+                    .then(response => {
+                        if (response.data.success) {
+                            status = response.data.status || 'sent_to_admin';
+                        }
+                    })
+                    .catch(error => {
+                        alert('حدث خطأ أثناء الإرسال');
+                    })
+                    .finally(() => {
+                        isLoading = false;
+                    });
+            "
+                                                            :disabled="isLoading"
+                                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors">
+                                                            <i class="bi"
+                                                                :class="isLoading ? 'bi-arrow-repeat animate-spin' : 'bi-send'"></i>
+                                                            <span>إرسال للأدمن</span>
+                                                        </button>
+
+                                                        <!-- زر عرض -->
                                                         <a href="{{ route('customers.show', $customer) }}"
                                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
                                                             <i class="bi bi-eye"></i>
                                                             <span>عرض</span>
                                                         </a>
+
+                                                        <!-- زر تعديل -->
                                                         <a href="{{ route('customers.edit', $customer) }}"
                                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors">
                                                             <i class="bi bi-pencil"></i>
@@ -131,10 +240,17 @@
                                                         </a>
                                                     </div>
                                                 </template>
+
                                                 <template x-if="status !== 'pending'">
                                                     <span
                                                         class="font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-xs">
-                                                        تم الطلب
+                                                        تم الإرسال للأدمن
+                                                    </span>
+                                                </template>
+                                                <template x-if="status === 'completed'">
+                                                    <span
+                                                        class="font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg text-xs">
+                                                        <i class="bi bi-printer me-1"></i> تم الطباعة
                                                     </span>
                                                 </template>
                                             @endif
@@ -142,7 +258,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-6 py-16 text-center">
+                                        <td colspan="5" class="px-6 py-16 text-center">
                                             <div class="flex flex-col items-center gap-3 text-gray-400">
                                                 <div
                                                     class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl">
