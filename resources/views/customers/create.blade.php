@@ -387,19 +387,19 @@
                                             $refs.input.files = dt.files;
                                         }
                                     }
-                                }" @dragover.prevent="isDragging = true"
+                                }" tabindex="0" @dragover.prevent="isDragging = true"
                                     @dragleave.prevent="isDragging = false"
                                     @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
-                                    @paste.window="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
+                                    @paste="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
                                     :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative">
+                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
 
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('الصورة الشخصية') }} <span class="text-red-500">*</span>
                                     </label>
 
                                     <div class="text-center text-xs text-gray-400 mb-2">
-                                        اسحب الصورة هنا أو ألصقها (Ctrl+V)
+                                        اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
                                     </div>
 
                                     <input type="file" name="personal_photo" accept="image/*" x-ref="input"
@@ -425,19 +425,19 @@
                                             $refs.input.files = dt.files;
                                         }
                                     }
-                                }" @dragover.prevent="isDragging = true"
+                                }" tabindex="0" @dragover.prevent="isDragging = true"
                                     @dragleave.prevent="isDragging = false"
                                     @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
-                                    @paste.window="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
+                                    @paste="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
                                     :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative">
+                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
 
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('رخصة القيادة المحلية') }} <span class="text-red-500">*</span>
                                     </label>
 
                                     <div class="text-center text-xs text-gray-400 mb-2">
-                                        اسحب الصورة هنا أو ألصقها (Ctrl+V)
+                                        اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
                                     </div>
 
                                     <input type="file" name="local_license" accept="image/*" x-ref="input"
@@ -463,19 +463,19 @@
                                             $refs.input.files = dt.files;
                                         }
                                     }
-                                }" @dragover.prevent="isDragging = true"
+                                }" tabindex="0" @dragover.prevent="isDragging = true"
                                     @dragleave.prevent="isDragging = false"
                                     @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
-                                    @paste.window="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
+                                    @paste="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
                                     :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative">
+                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
 
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('صورة جواز السفر') }} <span class="text-red-500">*</span>
                                     </label>
 
                                     <div class="text-center text-xs text-gray-400 mb-2">
-                                        اسحب الصورة هنا أو ألصقها (Ctrl+V)
+                                        اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
                                     </div>
 
                                     <input type="file" name="passport_photo" accept="image/*" x-ref="input"
