@@ -375,15 +375,38 @@
                             <div class="flex flex-col md:flex-row gap-6">
 
                                 <!-- الصورة الشخصية -->
-                                <div x-data="{ preview: null }"
-                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                <!-- الصورة الشخصية -->
+                                <div x-data="{
+                                    preview: null,
+                                    isDragging: false,
+                                    handleFile(file) {
+                                        if (file && file.type.startsWith('image/')) {
+                                            this.preview = URL.createObjectURL(file);
+                                            const dt = new DataTransfer();
+                                            dt.items.add(file);
+                                            $refs.input.files = dt.files;
+                                        }
+                                    }
+                                }" @dragover.prevent="isDragging = true"
+                                    @dragleave.prevent="isDragging = false"
+                                    @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
+                                    @paste.window="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
+                                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative">
+
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('الصورة الشخصية') }} <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="file" name="personal_photo" accept="image/*"
-                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+
+                                    <div class="text-center text-xs text-gray-400 mb-2">
+                                        اسحب الصورة هنا أو ألصقها (Ctrl+V)
+                                    </div>
+
+                                    <input type="file" name="personal_photo" accept="image/*" x-ref="input"
+                                        @change="handleFile($event.target.files[0])"
                                         class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
                                         required>
+
                                     <div x-show="preview" x-cloak class="mt-4">
                                         <img :src="preview"
                                             class="w-full h-32 object-cover rounded border border-gray-200">
@@ -391,52 +414,75 @@
                                 </div>
 
                                 <!-- رخصة القيادة -->
-                                <div x-data="{ preview: null }"
-                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                <div x-data="{
+                                    preview: null,
+                                    isDragging: false,
+                                    handleFile(file) {
+                                        if (file && file.type.startsWith('image/')) {
+                                            this.preview = URL.createObjectURL(file);
+                                            const dt = new DataTransfer();
+                                            dt.items.add(file);
+                                            $refs.input.files = dt.files;
+                                        }
+                                    }
+                                }" @dragover.prevent="isDragging = true"
+                                    @dragleave.prevent="isDragging = false"
+                                    @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
+                                    @paste.window="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
+                                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative">
+
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('رخصة القيادة المحلية') }} <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="file" name="local_license" accept="image/*"
-                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+
+                                    <div class="text-center text-xs text-gray-400 mb-2">
+                                        اسحب الصورة هنا أو ألصقها (Ctrl+V)
+                                    </div>
+
+                                    <input type="file" name="local_license" accept="image/*" x-ref="input"
+                                        @change="handleFile($event.target.files[0])"
                                         class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
                                         required>
+
                                     <div x-show="preview" x-cloak class="mt-4">
                                         <img :src="preview"
                                             class="w-full h-32 object-cover rounded border border-gray-200">
                                     </div>
                                 </div>
-                                <!-- صورة الرخصة الخلفية -->
-                                {{-- <div x-data="{ preview: null }"
-                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
-                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
-                                        {{ __('صورة الرخصة الخلفية') }} <span class="text-red-500">*</span>
-                                    </label>
-
-                                    <input type="file" name="local_license_back" accept="image/*"
-                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
-                                        class="block w-full text-xs text-gray-500
-               file:mr-0 file:py-2 file:px-4 file:w-full
-               file:rounded-md file:border-0 file:text-xs
-               file:font-semibold file:bg-[#e1e4e8]
-               file:text-gray-900 file:cursor-pointer text-center"
-                                        required>
-
-                                    <div x-show="preview" x-cloak class="mt-4">
-                                        <img :src="preview"
-                                            class="w-full h-32 object-cover rounded border border-gray-200">
-                                    </div>
-                                </div> --}}
 
                                 <!-- جواز السفر -->
-                                <div x-data="{ preview: null }"
-                                    class="flex-1 p-5 border border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all">
+                                <div x-data="{
+                                    preview: null,
+                                    isDragging: false,
+                                    handleFile(file) {
+                                        if (file && file.type.startsWith('image/')) {
+                                            this.preview = URL.createObjectURL(file);
+                                            const dt = new DataTransfer();
+                                            dt.items.add(file);
+                                            $refs.input.files = dt.files;
+                                        }
+                                    }
+                                }" @dragover.prevent="isDragging = true"
+                                    @dragleave.prevent="isDragging = false"
+                                    @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
+                                    @paste.window="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
+                                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative">
+
                                     <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
                                         {{ __('صورة جواز السفر') }} <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="file" name="passport_photo" accept="image/*"
-                                        @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : null"
+
+                                    <div class="text-center text-xs text-gray-400 mb-2">
+                                        اسحب الصورة هنا أو ألصقها (Ctrl+V)
+                                    </div>
+
+                                    <input type="file" name="passport_photo" accept="image/*" x-ref="input"
+                                        @change="handleFile($event.target.files[0])"
                                         class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
                                         required>
+
                                     <div x-show="preview" x-cloak class="mt-4">
                                         <img :src="preview"
                                             class="w-full h-32 object-cover rounded border border-gray-200">
