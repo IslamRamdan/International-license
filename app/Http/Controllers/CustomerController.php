@@ -64,10 +64,6 @@ class CustomerController extends Controller
    */
   public function show(Customer $customer)
   {
-    if (auth()->user()->email !== 'eslam@gmail.com') {
-      $this->authorizeUser($customer);
-    }
-    // $this->authorizeUser($customer);
 
     return view('customers.show', compact('customer'));
   }
@@ -77,10 +73,7 @@ class CustomerController extends Controller
    */
   public function edit(Customer $customer)
   {
-    if (auth()->user()->email !== 'eslam@gmail.com') {
-      $this->authorizeUser($customer);
-    }
-    // $this->authorizeUser($customer);
+    $this->authorizeUser($customer);
 
     // dd($customer); // Debugging line to inspect the $customer object
 
@@ -92,55 +85,39 @@ class CustomerController extends Controller
    */
   public function update(Request $request, Customer $customer)
   {
-    if (auth()->user()->email !== 'eslam@gmail.com') {
-      $this->authorizeUser($customer);
-    }
-    // $this->authorizeUser($customer);
+    $this->authorizeUser($customer);
 
-    $validated = $this->validateCustomer($request, true);
+    $validated = $this->validateCustomer($request, true, $customer->id);
+    // قائمة بالأشكال والمسارات الخاصة بكل صورة لتجنب التكرار
+    $files = [
+      'personal_photo'    => 'documents/personal',
+      'local_license'     => 'documents/licenses',
+      'local_license_back' => 'documents/licenses',
+      'passport_photo'    => 'documents/passports',
+    ];
 
-    // تحديث الصورة الشخصية
-    if ($request->hasFile('personal_photo')) {
-      Storage::disk('public')->delete($customer->personal_photo);
+    foreach ($files as $field => $path) {
+      if ($request->hasFile($field)) {
+        // حذف الملف القديم فقط إذا كان موجوداً
+        if ($customer->$field) {
+          Storage::disk('public')->delete($customer->$field);
+        }
 
-      $customer->personal_photo = $request->file('personal_photo')
-        ->store('documents/personal', 'public');
-    }
-
-    // تحديث صورة الرخصة الأمامية
-    if ($request->hasFile('local_license')) {
-      Storage::disk('public')->delete($customer->local_license);
-
-      $customer->local_license = $request->file('local_license')
-        ->store('documents/licenses', 'public');
-    }
-
-    // تحديث صورة الرخصة الخلفية
-    if ($request->hasFile('local_license_back')) {
-      Storage::disk('public')->delete($customer->local_license_back);
-
-      $customer->local_license_back = $request->file('local_license_back')
-        ->store('documents/licenses', 'public');
+        // رفع الملف الجديد وحفظ مساره في المصفوفة
+        $validated[$field] = $request->file($field)->store($path, 'public');
+      }
     }
 
-    // تحديث صورة الجواز
-    if ($request->hasFile('passport_photo')) {
-      Storage::disk('public')->delete($customer->passport_photo);
-
-      $customer->passport_photo = $request->file('passport_photo')
-        ->store('documents/passports', 'public');
-    }
-
-    $birthDate = sprintf(
+    // تجهيز تاريخ الميلاد
+    $validated['birth_date'] = sprintf(
       '%04d-%02d-%02d',
       $request->birth_year,
       $request->birth_month,
       $request->birth_day
     );
 
-    $customer->update(array_merge($validated, [
-      'birth_date' => $birthDate,
-    ]));
+    // تحديث السجل دفعة واحدة
+    $customer->update($validated);
 
     return redirect()->route('dashboard')->with('success', 'تم تعديل البيانات بنجاح!');
   }
