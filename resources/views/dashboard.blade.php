@@ -43,13 +43,7 @@
         $customersForExport = (method_exists($customers, 'getCollection')
             ? $customers->getCollection()
             : $customers
-        )->map(
-            fn($c) => [
-                'id' => $c->id,
-                'full_name' => $c->full_name,
-                'passport_number' => $c->passport_number,
-            ],
-        );
+        )->map(fn($c) => $c->toArray());
     @endphp
 
     <div class="py-10 bg-gray-50 min-h-screen form-shell" dir="rtl" x-data="{
@@ -77,6 +71,63 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'العملاء');
             XLSX.writeFile(workbook, 'customers_export.xlsx');
+        },
+        async sendToApi() {
+            if (this.selectedCustomers.length === 0) {
+                alert('يرجى تحديد عميل واحد على الأقل أولاً');
+                return;
+            }
+    
+            // تفكيك الـ Proxy واستخراج بيانات العملاء المحددات
+            const cleanData = JSON.parse(JSON.stringify(
+                this.customersData.filter(c => this.selectedCustomers.includes(String(c.id)))
+            ));
+    
+            const baseUrl = window.location.origin + '/storage/';
+    
+            for (const customer of cleanData) {
+                // تحويل التاريخ لـ DD/MM/YYYY
+                let formattedDob = '';
+                if (customer.birth_date) {
+                    const parts = customer.birth_date.split('-');
+                    if (parts.length === 3) {
+                        formattedDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+    
+                // تجهيز رابط الصور مع التأكد من إضافة Domin / Storage
+                const buildUrl = (path) => {
+                    if (!path) return null;
+                    return path.startsWith('http') ? path : baseUrl + path;
+                };
+    
+                const payload = {
+                    name: customer.full_name,
+                    dateOfBirth: formattedDob,
+                    passportID: customer.passport_number,
+                    bloodGroup: customer.blood_type,
+                    gender: 'male',
+                    phoneNumber: customer.phone_number || '',
+                    personalImgUrl: buildUrl(customer.personal_photo),
+                    passportImgUrl: buildUrl(customer.passport_photo),
+                    licenseImgUrl: buildUrl(customer.local_license)
+                };
+    
+                try {
+                    const response = await fetch('http://localhost:3000/api/issue-license', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+    
+                    const result = await response.json();
+                    console.log(`تم إرسال العميل ${customer.full_name}:`, result);
+                } catch (error) {
+                    console.error(`خطأ أثناء إرسال العميل ${customer.full_name}:`, error);
+                }
+            }
         }
     }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -100,14 +151,25 @@
                                 x-text="`تم تحديد ${selectedCustomers.length} عميل`"></span>
                         </span>
 
-                        <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white shadow-md transition-all duration-200"
-                            :class="selectedCustomers.length === 0 ?
-                                'bg-gray-300 cursor-not-allowed' :
-                                'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
-                            <i class="bi bi-file-earmark-excel"></i>
-                            <span>تصدير Excel للمحددين</span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button @click="sendToApi()" :disabled="selectedCustomers.length === 0"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white shadow-md transition-all duration-200"
+                                :class="selectedCustomers.length === 0 ?
+                                    'bg-gray-300 cursor-not-allowed' :
+                                    'bg-slate-700 hover:bg-slate-800 shadow-slate-700/20'">
+                                <i class="bi bi-terminal"></i>
+                                <span>طباعة في الكونسول</span>
+                            </button>
+
+                            <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white shadow-md transition-all duration-200"
+                                :class="selectedCustomers.length === 0 ?
+                                    'bg-gray-300 cursor-not-allowed' :
+                                    'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
+                                <i class="bi bi-file-earmark-excel"></i>
+                                <span>تصدير Excel للمحددين</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto -mx-6 sm:mx-0">
@@ -172,7 +234,12 @@
 
                                         <td class="px-6 py-4 text-center">
                                             @if (auth()->user()->email == 'eslam@gmail.com')
-                                                <!-- إظهار زر التبديل للأدمن فقط إذا تم إرسال الطلب (admin) أو اكتمل (completed) -->
+                                                <a href="{{ route('customers.show', $customer) }}"
+                                                    class="text-blue-500 hover:text-blue-700">عرض</a>
+                                                <button data-customer="{{ json_encode($customer) }}"
+                                                    class="bg-blue-500 hover:bg-blue-700 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200">
+                                                    حجز
+                                                </button>
                                                 <template x-if="status === 'admin' || status === 'completed'">
                                                     <button @click="toggleStatus()" :disabled="isLoading"
                                                         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs text-white shadow-md transition-all duration-200"
@@ -188,6 +255,7 @@
                                                         <span
                                                             x-text="status === 'completed' ? 'تم الطباعة' : 'اكتملت'"></span>
                                                     </button>
+
                                                 </template>
 
                                                 <!-- إظهار رسالة الإنتظار وشفرة عدم الإرسال في حالة عدم انطباق الشرط -->
