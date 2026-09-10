@@ -6,6 +6,7 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -241,6 +242,39 @@ class CustomerController extends Controller
       'success' => true,
       'status' => $customer->status,
       'message' => 'تم تحديث الحالة بنجاح',
+    ]);
+  }
+  public function card(Customer $customer)
+  {
+    // dd($customer);
+    if ($customer->customer_code == null) {
+      // توليد كود عشوائي فريد وتشفيره بـ base64 تلقائياً قبل الحفظ
+      $rawString = Str::random(16) . time();
+      $customer->customer_code = urlencode(base64_encode($rawString));
+      $customer->save();
+    }
+    return view('reports.card', compact('customer'));
+  }
+  public function updateLicense(Request $request, Customer $customer)
+  {
+    $validated = $request->validate([
+      'license_number' => 'required|string|max:255',
+    ]);
+
+    $customer->update([
+      'license_number' => $validated['license_number'],
+    ]);
+    if ($customer->customer_code == null) {
+      // توليد كود عشوائي فريد وتشفيره بـ base64 تلقائياً قبل الحفظ
+      $rawString = Str::random(16) . time();
+      $customer->customer_code = urlencode(base64_encode($rawString));
+      $customer->save();
+    }
+
+    return response()->json([
+      'status' => 'success',
+      'message' => 'تم تسجيل رقم الرخصة بنجاح',
+      'license_number' => $customer->license_number,
     ]);
   }
 }

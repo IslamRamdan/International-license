@@ -234,38 +234,81 @@
 
                                         <td class="px-6 py-4 text-center">
                                             @if (auth()->user()->email == 'eslam@gmail.com')
-                                                <a href="{{ route('customers.show', $customer) }}"
-                                                    class="text-blue-500 hover:text-blue-700">عرض</a>
-                                                <button data-customer="{{ json_encode($customer) }}"
-                                                    class="bg-blue-500 hover:bg-blue-700 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200">
-                                                    حجز
-                                                </button>
-                                                <template x-if="status === 'admin' || status === 'completed'">
-                                                    <button @click="toggleStatus()" :disabled="isLoading"
-                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs text-white shadow-md transition-all duration-200"
-                                                        :class="status === 'completed' ?
-                                                            'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' :
-                                                            'bg-gray-600 hover:bg-gray-700 shadow-gray-600/20'">
+                                                <div
+                                                    class="flex flex-wrap items-center gap-3 p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
 
-                                                        <i class="bi"
-                                                            :class="isLoading ? 'bi-arrow-repeat animate-spin' : (
-                                                                status === 'completed' ? 'bi-check-all' :
-                                                                'bi-check-lg')"></i>
+                                                    <!-- قسم نموذج إدخال رقم الرخصة -->
+                                                    <div x-data="licenseManager({ customerId: {{ $customer->id }}, currentLicense: '{{ $customer->license_number }}' })"
+                                                        class="flex items-center gap-1.5 flex-1 min-w-[260px]">
 
-                                                        <span
-                                                            x-text="status === 'completed' ? 'تم الطباعة' : 'اكتملت'"></span>
-                                                    </button>
+                                                        <div class="relative w-full">
+                                                            <input type="text" x-model="licenseNumber"
+                                                                placeholder="أدخل رقم الرخصة" :disabled="loading"
+                                                                :readonly="isSaved"
+                                                                :class="isSaved ?
+                                                                    'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' :
+                                                                    'bg-gray-50 text-gray-800 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'"
+                                                                class="w-full pl-3 pr-3 py-1.5 text-xs font-medium rounded-xl transition-all duration-200 focus:outline-none disabled:bg-gray-100 placeholder:text-gray-400" />
+                                                        </div>
 
-                                                </template>
+                                                        <!-- إخفاء الزر تماماً إذا تم الحفظ -->
+                                                        <template x-if="!isSaved">
+                                                            <button @click="saveLicense" :disabled="loading"
+                                                                class="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200 flex items-center justify-center min-w-[65px] shadow-sm shadow-blue-600/20">
+                                                                <span x-show="!loading">حفظ</span>
+                                                                <span x-show="loading" class="animate-spin text-xs">
+                                                                    <i class="bi bi-arrow-repeat"></i>
+                                                                </span>
+                                                            </button>
+                                                        </template>
+                                                    </div>
 
-                                                <!-- إظهار رسالة الإنتظار وشفرة عدم الإرسال في حالة عدم انطباق الشرط -->
-                                                <template x-if="status !== 'admin' && status !== 'completed'">
-                                                    <span
-                                                        class="font-semibold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1">
-                                                        <i class="bi bi-clock-history"></i>
-                                                        في انتظار الإرسال للأدمن
-                                                    </span>
-                                                </template>
+                                                    <!-- أزرار الإجراءات والروابط -->
+                                                    <div class="flex items-center gap-2">
+
+                                                        <!-- زر عرض -->
+                                                        <a href="{{ route('customers.show', $customer) }}"
+                                                            class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-xl transition-all duration-200">
+                                                            عرض
+                                                        </a>
+
+                                                        <!-- زر الكارت -->
+                                                        <a href="{{ route('customers.card', $customer) }}"
+                                                            target="_blank"
+                                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold transition-all duration-200 border border-blue-200/60">
+                                                            <i class="bi bi-card-heading text-sm"></i>
+                                                            <span>الكارت</span>
+                                                        </a>
+
+                                                        <!-- الحالة والتغيير المباشر -->
+                                                        <template x-if="status === 'admin' || status === 'completed'">
+                                                            <button @click="toggleStatus()" :disabled="isLoading"
+                                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs text-white shadow-sm transition-all duration-200 active:scale-95 disabled:opacity-50"
+                                                                :class="status === 'completed' ?
+                                                                    'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' :
+                                                                    'bg-slate-700 hover:bg-slate-800 shadow-slate-700/20'">
+
+                                                                <i class="bi"
+                                                                    :class="isLoading ? 'bi-arrow-repeat animate-spin' : (
+                                                                        status === 'completed' ?
+                                                                        'bi-check-all text-sm' : 'bi-check-lg')"></i>
+
+                                                                <span
+                                                                    x-text="status === 'completed' ? 'تم الطباعة' : 'اكتملت'"></span>
+                                                            </button>
+                                                        </template>
+
+                                                        <!-- حالة الانتظار -->
+                                                        <template x-if="status !== 'admin' && status !== 'completed'">
+                                                            <span
+                                                                class="font-semibold text-amber-700 bg-amber-50 border border-amber-200/60 px-3 py-1.5 rounded-xl text-xs inline-flex items-center gap-1.5">
+                                                                <i class="bi bi-clock-history animate-pulse"></i>
+                                                                <span>في انتظار الإرسال للأدمن</span>
+                                                            </span>
+                                                        </template>
+
+                                                    </div>
+                                                </div>
                                             @else
                                                 <template x-if="status === 'pending'">
                                                     <div class="flex justify-center items-center gap-2">
@@ -289,7 +332,8 @@
                                                             :disabled="isLoading"
                                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors">
                                                             <i class="bi"
-                                                                :class="isLoading ? 'bi-arrow-repeat animate-spin' : 'bi-send'"></i>
+                                                                :class="isLoading ? 'bi-arrow-repeat animate-spin' :
+                                                                    'bi-send'"></i>
                                                             <span>إرسال للأدمن</span>
                                                         </button>
 
@@ -356,5 +400,37 @@
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('licenseManager', (config) => ({
+                    licenseNumber: config.currentLicense || '',
+                    isSaved: Boolean(config.currentLicense),
+                    loading: false,
+
+                    async saveLicense() {
+                        if (!this.licenseNumber.trim()) {
+                            alert('يرجى إدخال رقم الرخصة أولاً');
+                            return;
+                        }
+
+                        this.loading = true;
+
+                        try {
+                            const response = await axios.patch(
+                                `/customers/${config.customerId}/license`, {
+                                    license_number: this.licenseNumber
+                                });
+
+                            this.isSaved = true; // تحويل الحقل إلى قراءة فقط فور الحفظ
+                            alert(response.data.message || 'تم حفظ رقم الرخصة بنجاح');
+                        } catch (error) {
+                            alert(error.response?.data?.message || 'حدث خطأ أثناء الحفظ');
+                        } finally {
+                            this.loading = false;
+                        }
+                    }
+                }));
+            });
+        </script>
     </div>
 </x-app-layout>
