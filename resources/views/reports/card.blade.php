@@ -64,7 +64,7 @@
             top: 14.5mm;
             left: 3.3mm;
             width: 19.5mm;
-            height: 26.5mm;
+            height: 25.5mm;
             border-radius: 6px;
             overflow: hidden;
         }
@@ -92,11 +92,11 @@
         .data-values {
             position: absolute;
             top: 13.2mm;
-            left: 41.5mm;
+            left: 39.5mm;
             display: flex;
             flex-direction: column;
             gap: 1.41mm;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: bold;
             color: #000;
             /* text-transform: uppercase; */
@@ -112,7 +112,7 @@
         .qr-box {
             position: absolute;
             top: 17.5mm;
-            right: 2mm;
+            right: 3mm;
             width: 17.5mm;
             height: 17.5mm;
 
@@ -165,7 +165,7 @@
             <div class="data-row">{{ \Carbon\Carbon::parse($customer->birth_date)->format('d/m/Y') }}</div>
             <div class="data-row">Sudan</div>
             <div class="data-row">KSA</div>
-            <div class="data-row">{{ $customer->passport_number }}</div>
+            <div class="data-row">{{ ucfirst($customer->passport_number) }}</div>
             <div class="data-row">Male</div>
             <div class="data-row">{{ $customer->blood_type }}</div>
             <div class="data-row">Sudan License</div>
