@@ -151,25 +151,27 @@
                                 x-text="`تم تحديد ${selectedCustomers.length} عميل`"></span>
                         </span>
 
-                        <div class="flex items-center gap-2">
-                            <button @click="sendToApi()" :disabled="selectedCustomers.length === 0"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white shadow-md transition-all duration-200"
-                                :class="selectedCustomers.length === 0 ?
-                                    'bg-gray-300 cursor-not-allowed' :
-                                    'bg-slate-700 hover:bg-slate-800 shadow-slate-700/20'">
-                                <i class="bi bi-terminal"></i>
-                                <span>طباعة في الكونسول</span>
-                            </button>
+                        @if (auth()->user()->email == 'eslam@gmail.com')
+                            <div class="flex items-center gap-2">
+                                <button @click="sendToApi()" :disabled="selectedCustomers.length === 0"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
+                                    :class="selectedCustomers.length === 0 ?
+                                        'bg-gray-300 cursor-not-allowed' :
+                                        'bg-slate-700 hover:bg-slate-800 shadow-slate-700/20'">
+                                    <i class="bi bi-terminal"></i>
+                                    <span>طباعة</span>
+                                </button>
 
-                            <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white shadow-md transition-all duration-200"
-                                :class="selectedCustomers.length === 0 ?
-                                    'bg-gray-300 cursor-not-allowed' :
-                                    'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
-                                <i class="bi bi-file-earmark-excel"></i>
-                                <span>تصدير Excel للمحددين</span>
-                            </button>
-                        </div>
+                                <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
+                                    :class="selectedCustomers.length === 0 ?
+                                        'bg-gray-300 cursor-not-allowed' :
+                                        'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
+                                    <i class="bi bi-file-earmark-excel"></i>
+                                    <span>تصدير Excel للمحددين</span>
+                                </button>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="overflow-x-auto -mx-6 sm:mx-0">
@@ -334,7 +336,7 @@
                                                             <i class="bi"
                                                                 :class="isLoading ? 'bi-arrow-repeat animate-spin' :
                                                                     'bi-send'"></i>
-                                                            <span>إرسال للأدمن</span>
+                                                            <span>إرسال للطباعة</span>
                                                         </button>
 
                                                         <!-- زر عرض -->
@@ -356,7 +358,7 @@
                                                 <template x-if="status !== 'pending'">
                                                     <span
                                                         class="font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-xs">
-                                                        تم الإرسال للأدمن
+                                                        تم الإرسال للطباعة
                                                     </span>
                                                 </template>
                                                 <template x-if="status === 'completed'">

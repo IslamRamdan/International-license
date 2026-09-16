@@ -161,7 +161,7 @@
         </div>
         <!-- البيانات الديناميكية فقط -->
         <div class="data-values">
-            <div class="data-row">{{ $customer->full_name }}</div>
+            <div class="data-row">{{ strtoupper($customer->full_name) }}</div>
             <div class="data-row">{{ \Carbon\Carbon::parse($customer->birth_date)->format('d/m/Y') }}</div>
             <div class="data-row">Sudan</div>
             <div class="data-row">KSA</div>
