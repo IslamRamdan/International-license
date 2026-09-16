@@ -208,7 +208,7 @@
                     @endif
 
                     {{-- قسم استخراج البيانات من MRZ (اختياري تمامًا ولا يؤثر على الإرسال) --}}
-                    <div class="mb-10 p-5 bg-[#f0f9ff] border border-dashed border-[#54aeff] rounded-md">
+                    {{-- <div class="mb-10 p-5 bg-[#f0f9ff] border border-dashed border-[#54aeff] rounded-md">
                         <div class="flex items-center gap-3 mb-3">
                             <i class="bi bi-upc-scan text-xl text-[#0969da]"></i>
                             <h3 class="text-base font-bold text-gray-900">تعبئة سريعة من MRZ (اختياري)</h3>
@@ -254,7 +254,7 @@
                                 يدويًا إن كانت هناك حقول لهما في نموذجك.
                             </p>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data"
                         class="space-y-10">
@@ -334,8 +334,7 @@
                                 </div>
 
                                 <div class="flex-1 min-w-[220px]">
-                                    <label for="passport_number"
-                                        class="block font-semibold text-sm text-gray-700 mb-2">
+                                    <label for="passport_number" class="block font-semibold text-sm text-gray-700 mb-2">
                                         {{ __('رقم جواز السفر') }} <span class="text-red-500">*</span>
                                     </label>
                                     <input id="passport_number" name="passport_number" type="text" dir="ltr"
