@@ -348,17 +348,16 @@
                                         class="block font-semibold text-sm text-gray-700 mb-2">
                                         {{ __('مدة الرخصة') }} <span class="text-red-500">*</span>
                                     </label>
-                                    <select id="license_duration" name="license_duration"
-                                        class="clean-input block w-full border-[#d0d7de] bg-white text-gray-900 rounded-md py-2.5 px-3 transition-shadow"
-                                        required>
-                                        <option value="" disabled selected>اختر المدة...</option>
-                                        <option value="1" {{ old('license_duration') == 1 ? 'selected' : '' }}>
-                                            سنة واحدة</option>
-                                        <option value="2" {{ old('license_duration') == 2 ? 'selected' : '' }}>
-                                            سنتان</option>
-                                        <option value="3" {{ old('license_duration') == 3 ? 'selected' : '' }}>3
-                                            سنوات</option>
+
+                                    <!-- القيمة المقروءة والمقفلة للمستخدم -->
+                                    <select id="license_duration_display"
+                                        class="clean-input block w-full border-[#d0d7de] bg-gray-100 text-gray-900 rounded-md py-2.5 px-3 transition-shadow opacity-75 cursor-not-allowed"
+                                        disabled>
+                                        <option value="1" selected>سنة واحدة</option>
                                     </select>
+
+                                    <!-- حقل مخفي لضمان إرسال القيمة إلى السيرفر -->
+                                    <input type="hidden" name="license_duration" value="1">
                                 </div>
 
                             </div>
