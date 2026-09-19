@@ -151,8 +151,8 @@
                                 x-text="`تم تحديد ${selectedCustomers.length} عميل`"></span>
                         </span>
 
-                        @if (auth()->user()->email == 'eslam@gmail.com')
-                            <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            @if (auth()->user()->email == 'eslam@gmail.com')
                                 <button @click="sendToApi()" :disabled="selectedCustomers.length === 0"
                                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
                                     :class="selectedCustomers.length === 0 ?
@@ -161,17 +161,16 @@
                                     <i class="bi bi-terminal"></i>
                                     <span>طباعة</span>
                                 </button>
-
-                                <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
-                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
-                                    :class="selectedCustomers.length === 0 ?
-                                        'bg-gray-300 cursor-not-allowed' :
-                                        'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
-                                    <i class="bi bi-file-earmark-excel"></i>
-                                    <span>تصدير Excel للمحددين</span>
-                                </button>
-                            </div>
-                        @endif
+                            @endif
+                            <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
+                                :class="selectedCustomers.length === 0 ?
+                                    'bg-gray-300 cursor-not-allowed' :
+                                    'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'">
+                                <i class="bi bi-file-earmark-excel"></i>
+                                <span>تصدير Excel للمحددين</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto -mx-6 sm:mx-0">
