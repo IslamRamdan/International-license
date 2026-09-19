@@ -21,6 +21,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Cropper.js (اقتصاص وتدوير الصور) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
     <style>
         [x-cloak] {
@@ -81,6 +84,13 @@
             'CA' => 'كندا',
             'AU' => 'أستراليا',
             'OT' => 'دولة أخرى',
+        ];
+
+        // المرفقات المطلوبة (name = اسم الحقل في الفورم)
+        $attachments = [
+            ['name' => 'personal_photo', 'label' => 'الصورة الشخصية'],
+            ['name' => 'local_license', 'label' => 'رخصة القيادة المحلية'],
+            ['name' => 'passport_photo', 'label' => 'صورة جواز السفر'],
         ];
     @endphp
 
@@ -372,120 +382,46 @@
 
                             <div class="flex flex-col md:flex-row gap-6">
 
-                                <!-- الصورة الشخصية -->
-                                <!-- الصورة الشخصية -->
-                                <div x-data="{
-                                    preview: null,
-                                    isDragging: false,
-                                    handleFile(file) {
-                                        if (file && file.type.startsWith('image/')) {
-                                            this.preview = URL.createObjectURL(file);
-                                            const dt = new DataTransfer();
-                                            dt.items.add(file);
-                                            $refs.input.files = dt.files;
-                                        }
-                                    }
-                                }" tabindex="0" @dragover.prevent="isDragging = true"
-                                    @dragleave.prevent="isDragging = false"
-                                    @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
-                                    @paste="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
-                                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                {{-- الصورة الشخصية / رخصة القيادة / جواز السفر --}}
+                                {{-- كل صندوق بيتشغّل من الـ JavaScript اللي تحت (data-uploader) --}}
+                                @foreach ($attachments as $att)
+                                    <div data-uploader tabindex="0"
+                                        class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
 
-                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
-                                        {{ __('الصورة الشخصية') }} <span class="text-red-500">*</span>
-                                    </label>
+                                        <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
+                                            {{ __($att['label']) }} <span class="text-red-500">*</span>
+                                        </label>
 
-                                    <div class="text-center text-xs text-gray-400 mb-2">
-                                        اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
+                                        <div class="text-center text-xs text-gray-400 mb-2">
+                                            اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
+                                        </div>
+
+                                        <input type="file" name="{{ $att['name'] }}" accept="image/*"
+                                            class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
+                                            required>
+
+                                        <div data-preview class="hidden mt-4">
+                                            <img data-preview-img alt=""
+                                                class="w-full h-32 object-cover rounded border border-gray-200">
+
+                                            <div class="mt-2 grid grid-cols-2 gap-2">
+                                                {{-- تدوير 90° مباشرة بدون نافذة --}}
+                                                <button type="button" data-rotate
+                                                    class="inline-flex justify-center items-center gap-2 py-2 px-3 rounded-md border border-[#d0d7de] bg-white text-xs font-semibold text-gray-800 hover:bg-[#e1e4e8] focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors disabled:opacity-50 disabled:cursor-wait">
+                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                    <span>تدوير</span>
+                                                </button>
+
+                                                {{-- اقتصاص: بيفتح نافذة الاقتصاص --}}
+                                                <button type="button" data-edit
+                                                    class="inline-flex justify-center items-center gap-2 py-2 px-3 rounded-md border border-[#d0d7de] bg-white text-xs font-semibold text-gray-800 hover:bg-[#e1e4e8] focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors">
+                                                    <i class="bi bi-crop"></i>
+                                                    <span>اقتصاص</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <input type="file" name="personal_photo" accept="image/*" x-ref="input"
-                                        @change="handleFile($event.target.files[0])"
-                                        class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
-                                        required>
-
-                                    <div x-show="preview" x-cloak class="mt-4">
-                                        <img :src="preview"
-                                            class="w-full h-32 object-cover rounded border border-gray-200">
-                                    </div>
-                                </div>
-
-                                <!-- رخصة القيادة -->
-                                <div x-data="{
-                                    preview: null,
-                                    isDragging: false,
-                                    handleFile(file) {
-                                        if (file && file.type.startsWith('image/')) {
-                                            this.preview = URL.createObjectURL(file);
-                                            const dt = new DataTransfer();
-                                            dt.items.add(file);
-                                            $refs.input.files = dt.files;
-                                        }
-                                    }
-                                }" tabindex="0" @dragover.prevent="isDragging = true"
-                                    @dragleave.prevent="isDragging = false"
-                                    @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
-                                    @paste="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
-                                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-
-                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
-                                        {{ __('رخصة القيادة المحلية') }} <span class="text-red-500">*</span>
-                                    </label>
-
-                                    <div class="text-center text-xs text-gray-400 mb-2">
-                                        اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
-                                    </div>
-
-                                    <input type="file" name="local_license" accept="image/*" x-ref="input"
-                                        @change="handleFile($event.target.files[0])"
-                                        class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
-                                        required>
-
-                                    <div x-show="preview" x-cloak class="mt-4">
-                                        <img :src="preview"
-                                            class="w-full h-32 object-cover rounded border border-gray-200">
-                                    </div>
-                                </div>
-
-                                <!-- جواز السفر -->
-                                <div x-data="{
-                                    preview: null,
-                                    isDragging: false,
-                                    handleFile(file) {
-                                        if (file && file.type.startsWith('image/')) {
-                                            this.preview = URL.createObjectURL(file);
-                                            const dt = new DataTransfer();
-                                            dt.items.add(file);
-                                            $refs.input.files = dt.files;
-                                        }
-                                    }
-                                }" tabindex="0" @dragover.prevent="isDragging = true"
-                                    @dragleave.prevent="isDragging = false"
-                                    @drop.prevent="isDragging = false; handleFile($event.dataTransfer.files[0])"
-                                    @paste="if ($event.clipboardData.files.length) handleFile($event.clipboardData.files[0])"
-                                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                                    class="flex-1 p-5 border-2 border-dashed border-[#d0d7de] rounded-md bg-[#f6f8fa] transition-all relative focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-
-                                    <label class="block font-semibold text-sm text-gray-700 mb-3 text-center">
-                                        {{ __('صورة جواز السفر') }} <span class="text-red-500">*</span>
-                                    </label>
-
-                                    <div class="text-center text-xs text-gray-400 mb-2">
-                                        اضغط هنا ثم ألصق (Ctrl+V) أو اسحب الصورة
-                                    </div>
-
-                                    <input type="file" name="passport_photo" accept="image/*" x-ref="input"
-                                        @change="handleFile($event.target.files[0])"
-                                        class="block w-full text-xs text-gray-500 file:mr-0 file:py-2 file:px-4 file:w-full file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#e1e4e8] file:text-gray-900 file:cursor-pointer text-center"
-                                        required>
-
-                                    <div x-show="preview" x-cloak class="mt-4">
-                                        <img :src="preview"
-                                            class="w-full h-32 object-cover rounded border border-gray-200">
-                                    </div>
-                                </div>
+                                @endforeach
 
                             </div>
                         </div>
@@ -515,4 +451,302 @@
             </div>
         </div>
     </div>
+
+    {{-- ========================= نافذة اقتصاص وتدوير الصورة ========================= --}}
+    <div id="cropModal" dir="rtl" role="dialog" aria-modal="true" aria-label="اقتصاص الصورة"
+        class="hidden fixed inset-0 z-50 items-center justify-center bg-black/60 p-3 sm:p-6 form-shell">
+
+        <div class="w-full max-w-3xl max-h-full flex flex-col bg-white rounded-md shadow-xl overflow-hidden">
+
+            <!-- العنوان -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-[#d0d7de] bg-[#f6f8fa]">
+                <h3 class="font-semibold text-sm text-gray-800">اقتصاص الصورة</h3>
+                <button type="button" id="cropClose" aria-label="إغلاق"
+                    class="text-gray-500 hover:text-gray-900 text-xl leading-none px-1">&times;</button>
+            </div>
+
+            <!-- منطقة الاقتصاص -->
+            <div id="cropStage" dir="ltr" class="bg-[#1f2328] h-[50vh] sm:h-[60vh] w-full"></div>
+
+            <!-- الأدوات -->
+            <div class="px-4 py-3 border-t border-[#d0d7de] space-y-3 overflow-y-auto">
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-700">نسبة الاقتصاص:</span>
+
+                    <button type="button" data-ratio="free"
+                        class="py-1.5 px-3 rounded-md border text-xs font-semibold bg-gray-900 text-white border-gray-900">حر</button>
+                    <button type="button" data-ratio="1"
+                        class="py-1.5 px-3 rounded-md border text-xs font-semibold bg-white text-gray-800 border-[#d0d7de]">1:1</button>
+                    <button type="button" data-ratio="0.75"
+                        class="py-1.5 px-3 rounded-md border text-xs font-semibold bg-white text-gray-800 border-[#d0d7de]">3:4</button>
+                    <button type="button" data-ratio="1.3333333"
+                        class="py-1.5 px-3 rounded-md border text-xs font-semibold bg-white text-gray-800 border-[#d0d7de]">4:3</button>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-1">
+                    <button type="button" id="cropReset"
+                        class="py-2 px-4 rounded-md text-xs font-semibold text-gray-600 hover:bg-[#e1e4e8]">إعادة
+                        ضبط</button>
+
+                    <div class="flex gap-2">
+                        <button type="button" id="cropCancel"
+                            class="py-2 px-4 rounded-md border border-[#d0d7de] bg-white text-xs font-semibold hover:bg-[#e1e4e8]">إلغاء</button>
+                        <button type="button" id="cropApply"
+                            class="py-2 px-5 rounded-md bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700">تطبيق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const MAX_SIZE = 2400; // أقصى بُعد للصورة الناتجة (بالبكسل)
+
+            /* ---------------------------------------------------------------
+             * 1) نافذة الاقتصاص (Cropper.js) - اقتصاص فقط
+             * ------------------------------------------------------------- */
+            const modal = document.getElementById('cropModal');
+            const stage = document.getElementById('cropStage');
+            const ratioButtons = modal.querySelectorAll('[data-ratio]');
+
+            const ACTIVE = ['bg-gray-900', 'text-white', 'border-gray-900'];
+            const INACTIVE = ['bg-white', 'text-gray-800', 'border-[#d0d7de]'];
+
+            let cropper = null;
+            let currentUploader = null;
+
+            function markRatio(activeBtn) {
+                ratioButtons.forEach(function(btn) {
+                    const on = btn === activeBtn;
+                    btn.classList.remove.apply(btn.classList, on ? INACTIVE : ACTIVE);
+                    btn.classList.add.apply(btn.classList, on ? ACTIVE : INACTIVE);
+                });
+            }
+
+            function destroyCropper() {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+                stage.innerHTML = '';
+            }
+
+            function openCropper(uploader) {
+                if (typeof Cropper === 'undefined') {
+                    alert('تعذّر تحميل مكتبة الاقتصاص، تأكد من الاتصال بالإنترنت وأعد تحميل الصفحة.');
+                    return;
+                }
+                if (!uploader.url) return;
+
+                currentUploader = uploader;
+                markRatio(modal.querySelector('[data-ratio="free"]'));
+
+                // نظهر المودال الأول عشان أبعاد الحاوية تتحسب صح
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+
+                destroyCropper();
+                const img = document.createElement('img');
+                img.alt = '';
+                img.className = 'block max-w-full';
+                img.addEventListener('load', function() {
+                    cropper = new Cropper(img, {
+                        viewMode: 1,
+                        dragMode: 'crop',
+                        autoCropArea: 1,
+                        background: false,
+                        responsive: true,
+                    });
+                });
+                stage.appendChild(img);
+                img.src = uploader.url;
+            }
+
+            function closeCropper() {
+                destroyCropper();
+                currentUploader = null;
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            ratioButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (!cropper) return;
+                    const v = btn.getAttribute('data-ratio');
+                    cropper.setAspectRatio(v === 'free' ? NaN : parseFloat(v));
+                    markRatio(btn);
+                });
+            });
+
+            document.getElementById('cropReset').addEventListener('click', function() {
+                if (!cropper) return;
+                cropper.reset();
+                cropper.setAspectRatio(NaN);
+                markRatio(modal.querySelector('[data-ratio="free"]'));
+            });
+
+            document.getElementById('cropApply').addEventListener('click', function() {
+                if (!cropper || !currentUploader) return;
+
+                const canvas = cropper.getCroppedCanvas({
+                    maxWidth: MAX_SIZE,
+                    maxHeight: MAX_SIZE,
+                    fillColor: '#ffffff',
+                    imageSmoothingQuality: 'high',
+                });
+                if (!canvas) return;
+
+                const target = currentUploader;
+                const newName = target.name.replace(/\.[^.]+$/, '') + '.jpg';
+
+                canvas.toBlob(function(blob) {
+                    if (!blob) return;
+                    const file = new File([blob], newName, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    target.setFile(file);
+                    closeCropper();
+                }, 'image/jpeg', 0.92);
+            });
+
+            document.getElementById('cropCancel').addEventListener('click', closeCropper);
+            document.getElementById('cropClose').addEventListener('click', closeCropper);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeCropper();
+            });
+
+            /* ---------------------------------------------------------------
+             * 2) تدوير الصورة 90° مباشرة (بدون نافذة) عن طريق Canvas
+             * ------------------------------------------------------------- */
+            function rotateImage90(url, name) {
+                return new Promise(function(resolve, reject) {
+                    const img = new Image();
+
+                    img.onload = function() {
+                        const w = img.naturalWidth;
+                        const h = img.naturalHeight;
+                        const scale = Math.min(1, MAX_SIZE / Math.max(w, h));
+                        const sw = Math.round(w * scale);
+                        const sh = Math.round(h * scale);
+
+                        // بعد التدوير 90° العرض والارتفاع بيتبدلوا
+                        const canvas = document.createElement('canvas');
+                        canvas.width = sh;
+                        canvas.height = sw;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.translate(canvas.width / 2, canvas.height / 2);
+                        ctx.rotate(Math.PI / 2); // 90° في اتجاه عقارب الساعة
+                        ctx.drawImage(img, -sw / 2, -sh / 2, sw, sh);
+
+                        canvas.toBlob(function(blob) {
+                            if (!blob) {
+                                reject(new Error('toBlob failed'));
+                                return;
+                            }
+                            resolve(new File([blob], name.replace(/\.[^.]+$/, '') + '.jpg', {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            }));
+                        }, 'image/jpeg', 0.95);
+                    };
+
+                    img.onerror = reject;
+                    img.src = url;
+                });
+            }
+
+            /* ---------------------------------------------------------------
+             * 3) صناديق رفع الصور (سحب / لصق / اختيار + معاينة + تدوير + اقتصاص)
+             * ------------------------------------------------------------- */
+            document.querySelectorAll('[data-uploader]').forEach(function(box) {
+                const input = box.querySelector('input[type="file"]');
+                const previewWrap = box.querySelector('[data-preview]');
+                const previewImg = box.querySelector('[data-preview-img]');
+                const rotateBtn = box.querySelector('[data-rotate]');
+                const editBtn = box.querySelector('[data-edit]');
+
+                const uploader = {
+                    url: null,
+                    name: 'image.jpg',
+                    setFile: setFile,
+                };
+
+                function setFile(file) {
+                    if (!file || !file.type.startsWith('image/')) return;
+
+                    const oldUrl = uploader.url;
+                    uploader.url = URL.createObjectURL(file);
+                    uploader.name = file.name || 'image.jpg';
+
+                    previewImg.src = uploader.url;
+                    previewWrap.classList.remove('hidden');
+
+                    // نحط الملف في الـ input عشان يتبعت مع الفورم
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+
+                    if (oldUrl) URL.revokeObjectURL(oldUrl);
+                }
+
+                input.addEventListener('change', function() {
+                    setFile(input.files[0]);
+                });
+
+                box.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    box.classList.add('border-blue-500', 'bg-blue-50');
+                });
+
+                box.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    box.classList.remove('border-blue-500', 'bg-blue-50');
+                });
+
+                box.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    box.classList.remove('border-blue-500', 'bg-blue-50');
+                    setFile(e.dataTransfer.files[0]);
+                });
+
+                box.addEventListener('paste', function(e) {
+                    if (e.clipboardData && e.clipboardData.files.length) {
+                        setFile(e.clipboardData.files[0]);
+                    }
+                });
+
+                // تدوير مباشر: كل ضغطة = 90° يمين، من غير نافذة
+                rotateBtn.addEventListener('click', function() {
+                    if (!uploader.url || rotateBtn.disabled) return;
+                    rotateBtn.disabled = true;
+
+                    rotateImage90(uploader.url, uploader.name)
+                        .then(setFile)
+                        .catch(function() {
+                            alert('تعذّر تدوير الصورة، حاول مرة أخرى.');
+                        })
+                        .finally(function() {
+                            rotateBtn.disabled = false;
+                        });
+                });
+
+                // اقتصاص: بيفتح نافذة الاقتصاص
+                editBtn.addEventListener('click', function() {
+                    openCropper(uploader);
+                });
+            });
+        })();
+    </script>
 </x-app-layout>
