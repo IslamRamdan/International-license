@@ -3,13 +3,11 @@
 use App\Http\Controllers\ProfileController;
 use App\Models\Customer;
 use App\Http\Controllers\CustomerController;
-
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
-
 
 Route::get('/dashboard', function () {
     if (auth()->user()->email == 'eslam@gmail.com') {
@@ -27,12 +25,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers/card/{customer}', [CustomerController::class, 'card'])->name('customers.card');
     Route::patch('/customers/{customer}/license', [CustomerController::class, 'updateLicense'])->name('customers.update-license');
 });
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class);

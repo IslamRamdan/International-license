@@ -153,15 +153,15 @@
 
                         <div class="flex items-center gap-2">
                             @if (auth()->user()->email == 'eslam@gmail.com')
-                                <button @click="sendToApi()" :disabled="selectedCustomers.length === 0"
-                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
-                                    :class="selectedCustomers.length === 0 ?
-                                        'bg-gray-300 cursor-not-allowed' :
-                                        'bg-slate-700 hover:bg-slate-800 shadow-slate-700/20'">
-                                    <i class="bi bi-terminal"></i>
-                                    <span>طباعة</span>
-                                </button>
                             @endif
+                            <button @click="sendToApi()" :disabled="selectedCustomers.length === 0"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
+                                :class="selectedCustomers.length === 0 ?
+                                    'bg-gray-300 cursor-not-allowed' :
+                                    'bg-slate-700 hover:bg-slate-800 shadow-slate-700/20'">
+                                <i class="bi bi-terminal"></i>
+                                <span>طباعة</span>
+                            </button>
                             <button @click="exportSelected()" :disabled="selectedCustomers.length === 0"
                                 class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-black shadow-md transition-all duration-200"
                                 :class="selectedCustomers.length === 0 ?
